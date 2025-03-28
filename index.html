@@ -57,6 +57,32 @@
     .btn-custom:hover {
       background-color: #2980b9;
     }
+    .btn-secondary:hover {
+      background-color: #7f8c8d;
+    }
+    .copy-btn {
+      background-color: #2ecc71;
+      border: none;
+      color: white;
+      transition: background-color 0.3s ease;
+    }
+    .copy-btn:hover {
+      background-color: #27ae60;
+    }
+    .btn-group {
+      margin-top: 20px;
+    }
+    .copy-container {
+      margin-top: 20px;
+    }
+    .copied-alert {
+      display: none;
+      margin-top: 10px;
+      padding: 10px;
+      background-color: #27ae60;
+      color: white;
+      border-radius: 5px;
+    }
   </style>
 </head>
 <body>
@@ -71,11 +97,13 @@
           <label for="data" class="form-label">Escolha a data:</label>
           <input type="date" id="data" class="form-control">
         </div>
-        <div class="mb-3">
+        <div class="btn-group">
           <button onclick="buscar()" class="btn btn-custom">Buscar Jogos</button>
-          <button onclick="window.print()" class="btn btn-secondary ms-2">Imprimir/Salvar</button>
+          <button onclick="imprimirAgenda()" class="btn btn-secondary ms-2">Imprimir Agenda</button>
+          <button onclick="copiarJogos()" class="btn copy-btn ms-2">Copiar Jogos</button>
         </div>
         <div id="resultados"></div>
+        <div class="copied-alert" id="copiedAlert">Jogos copiados para a área de transferência!</div>
       </div>
       <div class="col-lg-6">
         <h2 class="text-center">Agenda GE (Interativo)</h2>
