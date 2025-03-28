@@ -1,80 +1,81 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Agenda GE - Jogos do Dia</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Consulta GE</title>
   <style>
     :root {
-      --bg: #f8f9fa;
-      --primary: #1e88e5;
-      --secondary: #1565c0;
-      --text: #2c3e50;
+      --bg: #f4f8fb;
+      --primary: #0e76a8;
+      --accent: #1abc9c;
       --card-bg: #ffffff;
-      --shadow: 0 8px 20px rgba(0,0,0,0.1);
+      --text: #2c3e50;
+      --shadow: rgba(0, 0, 0, 0.1);
     }
 
     * {
       box-sizing: border-box;
-      margin: 0;
-      padding: 0;
     }
 
     body {
-      font-family: 'Inter', sans-serif;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', sans-serif;
       background: var(--bg);
       color: var(--text);
-      padding: 2rem;
     }
 
     header {
+      background: var(--primary);
+      color: white;
       text-align: center;
-      margin-bottom: 2rem;
+      padding: 2rem 1rem;
+      box-shadow: 0 2px 8px var(--shadow);
     }
 
     header h1 {
+      margin: 0;
       font-size: 2rem;
-      font-weight: 700;
-      color: var(--primary);
     }
 
     .container {
-      max-width: 900px;
-      margin: 0 auto;
+      max-width: 1000px;
+      margin: 2rem auto;
+      padding: 1rem;
     }
 
     .controls {
       display: flex;
       flex-wrap: wrap;
+      gap: 1rem;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 2rem;
-      gap: 1rem;
     }
 
     input[type="date"] {
-      padding: 0.7rem;
-      font-size: 1rem;
-      border: 2px solid var(--primary);
+      padding: 0.7rem 1rem;
+      border: 1px solid #ccc;
       border-radius: 8px;
-      background: white;
+      font-size: 1rem;
       flex: 1;
     }
 
     button {
-      padding: 0.75rem 1.5rem;
-      font-size: 1rem;
-      background: var(--primary);
-      color: white;
+      padding: 0.7rem 1.5rem;
       border: none;
       border-radius: 8px;
+      background-color: var(--accent);
+      color: white;
+      font-weight: bold;
+      font-size: 1rem;
       cursor: pointer;
-      transition: background 0.3s ease;
+      transition: 0.2s;
     }
 
     button:hover {
-      background: var(--secondary);
+      background-color: #16a085;
     }
 
     .jogos-container {
@@ -85,70 +86,65 @@
     .campeonato {
       background: var(--card-bg);
       border-radius: 10px;
-      box-shadow: var(--shadow);
-      padding: 1.5rem;
+      box-shadow: 0 4px 8px var(--shadow);
+      padding: 1rem;
     }
 
-    .campeonato-header {
-      font-weight: 600;
-      font-size: 1.2rem;
-      margin-bottom: 1rem;
+    .campeonato h2 {
+      margin-top: 0;
       color: var(--primary);
-      border-left: 5px solid var(--secondary);
-      padding-left: 0.5rem;
     }
 
     .jogo {
+      border-top: 1px dashed #ccc;
       padding: 0.5rem 0;
-      border-bottom: 1px solid #eee;
-    }
-
-    .jogo:last-child {
-      border-bottom: none;
-    }
-
-    .jogo-formatado {
       font-weight: 500;
     }
 
-    .copy-button-container {
-      text-align: center;
-      margin-top: 1rem;
-    }
-
-    .error, .loading {
-      text-align: center;
-      padding: 1.5rem;
-      background: #ffe9e9;
-      border: 1px solid #ffaaaa;
-      border-radius: 10px;
-      color: #c0392b;
-      font-weight: 500;
+    .jogo:first-child {
+      border-top: none;
     }
 
     iframe {
       width: 100%;
-      height: 500px;
-      border-radius: 10px;
+      height: 450px;
       border: none;
+      border-radius: 8px;
       margin-top: 2rem;
-      box-shadow: var(--shadow);
+      box-shadow: 0 4px 10px var(--shadow);
+    }
+
+    .copy-button {
+      display: block;
+      margin: 2rem auto 0;
+      padding: 0.6rem 2rem;
+      font-size: 1rem;
+      background-color: var(--primary);
+    }
+
+    @media (max-width: 600px) {
+      .controls {
+        flex-direction: column;
+        align-items: stretch;
+      }
     }
   </style>
 </head>
 <body>
   <header>
-    <h1>⚽ Agenda de Jogos - GE.globo</h1>
+    <h1>Consulta GE ⚽</h1>
   </header>
 
   <div class="container">
     <div class="controls">
       <input type="date" id="dataInput" onchange="atualizarIframe()">
       <button onclick="carregarJogos()">Buscar Jogos</button>
-      <button onclick="copiarTexto()">Copiar Texto</button>
     </div>
 
-    <div id="resultado"></div>
+    <div id="resultados"></div>
+
+    <button id="copyButton" class="copy-button" style="display:none;" onclick="copiarTexto()">Copiar Texto</button>
+
     <iframe id="geAgendaIframe" src="https://ge.globo.com/agenda/#/futebol/"></iframe>
   </div>
 
@@ -156,6 +152,7 @@
     function atualizarIframe() {
       const data = document.getElementById('dataInput').value;
       const iframe = document.getElementById('geAgendaIframe');
+
       if (data) {
         const [ano, mes, dia] = data.split('-');
         const dataFormatada = `${dia}-${mes}-${ano}`;
@@ -167,7 +164,8 @@
 
     async function carregarJogos() {
       const data = document.getElementById('dataInput').value;
-      const resultado = document.getElementById('resultado');
+      const resultado = document.getElementById('resultados');
+      
       if (!data) {
         resultado.innerHTML = `<div class="error">Selecione uma data válida</div>`;
         return;
@@ -176,43 +174,48 @@
       const [ano, mes, dia] = data.split('-');
       const dataFormatada = `${dia}-${mes}-${ano}`;
 
-      resultado.innerHTML = `<div class="loading">Carregando jogos...</div>`;
+      resultado.innerHTML = `<p>Carregando jogos...</p>`;
 
       try {
         const resposta = await fetch(`https://agenda-ge-backend.onrender.com/jogos/${dataFormatada}`);
         const jogos = await resposta.json();
 
         if (jogos.erro) {
-          resultado.innerHTML = `<div class="error">${jogos.erro}</div>`;
+          resultado.innerHTML = `<p style="color:red;">${jogos.erro}</p>`;
+          document.getElementById('copyButton').style.display = 'none';
           return;
         }
 
-        let html = '<div class="jogos-container">';
-        for (const [campeonato, jogosList] of Object.entries(jogos)) {
-          html += `<div class="campeonato">`;
-          html += `<div class="campeonato-header">${campeonato}</div>`;
-          jogosList.forEach(jogo => {
-            html += `<div class="jogo"><span class="jogo-formatado">${jogo}</span></div>`;
-          });
-          html += `</div>`;
-        }
-        html += '</div>';
-
-        resultado.innerHTML = html;
+        exibirJogos(jogos);
+        document.getElementById('copyButton').style.display = 'block';
       } catch (erro) {
-        resultado.innerHTML = `<div class="error">Erro: ${erro.message}</div>`;
+        resultado.innerHTML = `<p style="color:red;">Erro ao buscar dados</p>`;
+        document.getElementById('copyButton').style.display = 'none';
       }
     }
 
+    function exibirJogos(jogos) {
+      let html = '<div class="jogos-container">';
+      for (const [campeonato, lista] of Object.entries(jogos)) {
+        html += `<div class="campeonato"><h2>${campeonato}</h2>`;
+        lista.forEach(jogo => {
+          html += `<div class="jogo">${jogo}</div>`;
+        });
+        html += '</div>';
+      }
+      html += '</div>';
+      document.getElementById('resultados').innerHTML = html;
+    }
+
     function copiarTexto() {
-      const texto = document.getElementById('resultado').innerText;
+      const texto = document.getElementById('resultados').innerText;
       if (!texto) {
         alert("Nenhum jogo encontrado para copiar!");
         return;
       }
       navigator.clipboard.writeText(texto)
         .then(() => alert("Texto copiado para a área de transferência!"))
-        .catch(err => alert("Erro ao copiar texto: " + err));
+        .catch(() => alert("Erro ao copiar texto."));
     }
   </script>
 </body>
