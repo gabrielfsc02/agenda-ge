@@ -46,14 +46,8 @@ async function carregarJogos() {
 }
 
 function exibirJogos(jogos) {
-  // Agrupa os jogos por campeonato
-  const agrupados = Object.keys(jogos).reduce((acc, campeonato) => {
-    acc[campeonato] = jogos[campeonato];
-    return acc;
-  }, {});
-  
   let html = '<div class="jogos-container">';
-  for (const [campeonato, jogosList] of Object.entries(agrupados)) {
+  for (const [campeonato, jogosList] of Object.entries(jogos)) {
     html += `
       <div class="campeonato">
         <div class="campeonato-header">${campeonato}</div>
@@ -71,7 +65,7 @@ function exibirJogos(jogos) {
   document.getElementById('resultado').innerHTML = html;
 }
 
-// Função para copiar os jogos exibidos
+// Função para copiar os resultados exibidos
 function copiarTexto() {
   const texto = document.getElementById('resultado').innerText;
   if (!texto) {
@@ -87,27 +81,35 @@ function copiarTexto() {
     });
 }
 
-// Função para gerar PDF da área de resultados usando jsPDF
-function imprimirAgenda() {
+// Função para gerar PDF da página do GE usando o endpoint do backend
+async function imprimirAgenda() {
   const data = document.getElementById('dataInput').value;
   if (!data) {
     alert("Selecione uma data!");
     return;
   }
-  const resultado = document.getElementById('resultado').innerText;
-  if (!resultado) {
-    alert("Nenhum jogo encontrado para gerar PDF!");
-    return;
-  }
-  // Utilize jsPDF para gerar o PDF
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
-
-  // Divida o texto para caber na página
-  const lines = doc.splitTextToSize(resultado, 180);
-  doc.text(lines, 10, 10);
-
   const [ano, mes, dia] = data.split('-');
   const dataFormatada = `${dia}-${mes}-${ano}`;
-  doc.save(`agenda_ge_${dataFormatada}.pdf`);
+  
+  try {
+    // Chama o endpoint /gerar-pdf da sua API
+    const response = await fetch(`https://agenda-ge-backend.onrender.com/gerar-pdf/${dataFormatada}`, {
+      method: 'POST'
+    });
+    if (!response.ok) {
+      const erro = await response.json();
+      throw new Error(erro.erro || 'Erro na geração do PDF');
+    }
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `agenda_ge_${dataFormatada}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+  } catch (erro) {
+    alert("Erro ao gerar PDF: " + erro.message);
+  }
 }
