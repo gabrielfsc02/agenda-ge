@@ -9,7 +9,7 @@ async function carregarJogos() {
   const partes = dataInput.split('-'); // [yyyy, mm, dd]
   const dataFormatada = `${partes[2]}-${partes[1]}-${partes[0]}`;
 
-  // URL do backend (substitua se necessário)
+  // URL do backend (ajuste se necessário)
   const res = await fetch(`https://agenda-ge-backend.onrender.com/jogos/${dataFormatada}`);
   const dados = await res.json();
 
@@ -17,7 +17,7 @@ async function carregarJogos() {
   div.innerHTML = '';
 
   if (dados.erro) {
-    div.innerHTML = `<p style="color: red;">${dados.erro}</p>`;
+    div.innerHTML = `<p class="text-danger">${dados.erro}</p>`;
     return;
   }
 
