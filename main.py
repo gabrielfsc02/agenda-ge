@@ -1,4 +1,3 @@
-
 import os
 import requests
 from fastapi import FastAPI
@@ -22,6 +21,13 @@ def coletar_jogos(data: str):
     try:
         dia, mes, ano = data.split("-")
         data_formatada = f"{ano}-{mes}-{dia}"
+
+        headers = {
+            "User-Agent": "Mozilla/5.0",
+            "Content-Type": "application/json",
+            "Referer": "https://ge.globo.com/"
+        }
+
         query = {
             "operationName": "AgendaFutebol",
             "variables": {
@@ -50,7 +56,7 @@ def coletar_jogos(data: str):
             '''
         }
 
-        res = requests.post(GRAPHQL_URL, json=query)
+        res = requests.post(GRAPHQL_URL, headers=headers, json=query)
         res.raise_for_status()
         data = res.json()
 
