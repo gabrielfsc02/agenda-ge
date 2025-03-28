@@ -45,10 +45,17 @@ def coletar_jogos(data: str):
         res = requests.get(GRAPHQL_URL, headers=headers, params=params)
         res.raise_for_status()
         data = res.json()
-
-        eventos = data["data"]["sports"][0]["events"]["items"]
+        
+        # Print the raw response data to check structure
+        print("Response Data:", data)
+        
+        # Check if 'sports' key exists
+        if "data" in data and "sports" in data["data"]:
+            eventos = data["data"]["sports"][0]["events"]["items"]
+        else:
+            return {"erro": "Estrutura dos dados inesperada ou chave 'sports' não encontrada"}
+        
         resultados = {}
-
         for evento in eventos:
             campeonato = evento["championship"]["name"]
             mandante = evento["homeTeam"]["name"]
