@@ -4,7 +4,6 @@ import requests
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime
-from bs4 import BeautifulSoup
 
 app = FastAPI()
 
@@ -16,60 +15,69 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+GRAPHQL_URL = "https://ge.globo.com/graphql"
+
 @app.get("/jogos/{data}")
 def coletar_jogos(data: str):
-    url = f"https://ge.globo.com/agenda/#/futebol/{data}"
-    response = requests.get(url)
-
-    if response.status_code != 200:
-        return {"erro": "Não foi possível acessar a agenda"}
-
-    soup = BeautifulSoup(response.text, "html.parser")
-    scripts = soup.find_all("script")
-
-    json_data = None
-    for script in scripts:
-        if "__APOLLO_STATE__" in script.text:
-            start = script.text.find("{")
-            try:
-                json_data = script.text[start:]
-                break
-            except Exception:
-                continue
-
-    if not json_data:
-        return {"erro": "Dados da agenda não encontrados"}
-
-    import json
     try:
-        # limpa o conteúdo para parsear corretamente
-        json_data = json.loads(json_data)
-    except Exception:
-        return {"erro": "Erro ao processar os dados"}
+        dia, mes, ano = data.split("-")
+        data_formatada = f"{ano}-{mes}-{dia}"
+        query = {
+            "operationName": "AgendaFutebol",
+            "variables": {
+                "sport": "futebol",
+                "date": data_formatada
+            },
+            "query": '''
+                query AgendaFutebol($sport: String!, $date: String!) {
+                  sports(sport: $sport) {
+                    events(date: $date) {
+                      items {
+                        startTime
+                        homeTeam {
+                          name
+                        }
+                        awayTeam {
+                          name
+                        }
+                        championship {
+                          name
+                        }
+                      }
+                    }
+                  }
+                }
+            '''
+        }
 
-    eventos = [v for k, v in json_data.items() if k.startswith("Event:")]
+        res = requests.post(GRAPHQL_URL, json=query)
+        res.raise_for_status()
+        data = res.json()
 
-    resultados = {}
-    for evento in eventos:
-        campeonato = evento.get("championship", {}).get("name", "Desconhecido")
-        mandante = evento.get("homeTeam", {}).get("name")
-        visitante = evento.get("awayTeam", {}).get("name")
-        hora = evento.get("startTime")
-        if not all([mandante, visitante, hora]):
-            continue
+        eventos = data["data"]["sports"][0]["events"]["items"]
+        resultados = {}
 
-        hora_formatada = datetime.fromisoformat(hora).strftime("%H:%M")
-        data_formatada = datetime.strptime(data, "%d-%m-%Y").strftime("%d/%m/%Y")
-        linha = f"{data_formatada} - {hora_formatada} - {mandante} x {visitante}"
+        for evento in eventos:
+            campeonato = evento["championship"]["name"]
+            mandante = evento["homeTeam"]["name"]
+            visitante = evento["awayTeam"]["name"]
+            hora_raw = evento["startTime"]
 
-        if campeonato not in resultados:
-            resultados[campeonato] = []
-        resultados[campeonato].append(linha)
+            hora = datetime.fromisoformat(hora_raw).strftime("%H:%M")
+            data_formatada_exibicao = datetime.fromisoformat(hora_raw).strftime("%d/%m/%Y")
+            linha = f"{data_formatada_exibicao} - {hora} - {mandante} x {visitante}"
 
-    for jogos in resultados.values():
-        jogos.sort()
+            if campeonato not in resultados:
+                resultados[campeonato] = []
+            resultados[campeonato].append(linha)
 
-    return resultados
+        for jogos in resultados.values():
+            jogos.sort()
+
+        return resultados
+
+    except Exception as e:
+        return {"erro": f"Erro ao coletar jogos: {str(e)}"}
 
 if __name__ == "__main__":
     import uvicorn
