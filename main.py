@@ -1,18 +1,13 @@
 
 import os
-import subprocess
+import requests
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from playwright.sync_api import sync_playwright
 from datetime import datetime
-import uvicorn
-
-# Garante instalação dos navegadores no ambiente da Render
-subprocess.run("playwright install --with-deps", shell=True)
+from bs4 import BeautifulSoup
 
 app = FastAPI()
 
-# Permitir chamadas do frontend (CORS)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -24,45 +19,59 @@ app.add_middleware(
 @app.get("/jogos/{data}")
 def coletar_jogos(data: str):
     url = f"https://ge.globo.com/agenda/#/futebol/{data}"
+    response = requests.get(url)
 
-    with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
-        page = browser.new_page()
-        page.goto(url, wait_until="load")
-        page.wait_for_selector(".eventGrouperstyle__GroupByChampionshipsWrapper-sc-1bz1qr-0", timeout=15000)
+    if response.status_code != 200:
+        return {"erro": "Não foi possível acessar a agenda"}
 
-        campeonatos = page.query_selector_all(".eventGrouperstyle__GroupByChampionshipsWrapper-sc-1bz1qr-0")
-        resultados = {}
+    soup = BeautifulSoup(response.text, "html.parser")
+    scripts = soup.find_all("script")
 
-        for camp in campeonatos:
-            nome = camp.query_selector(".eventGrouperstyle__ChampionshipName-sc-1bz1qr-2")
-            nome_camp = nome.inner_text().strip() if nome else "Desconhecido"
-            jogos_raw = camp.query_selector_all('[aria-label^="Confira o vídeo dos melhores momentos do jogo"]')
-            jogos = []
+    json_data = None
+    for script in scripts:
+        if "__APOLLO_STATE__" in script.text:
+            start = script.text.find("{")
+            try:
+                json_data = script.text[start:]
+                break
+            except Exception:
+                continue
 
-            for jogo in jogos_raw:
-                horario_tags = jogo.query_selector_all("span.sc-jXbUNg.zrfFX")
-                if len(horario_tags) < 2:
-                    continue
-                hora = horario_tags[1].inner_text().strip()
+    if not json_data:
+        return {"erro": "Dados da agenda não encontrados"}
 
-                clubes = jogo.query_selector_all("span.sc-eeDRCY.kXIsjf")
-                if len(clubes) < 2:
-                    continue
+    import json
+    try:
+        # limpa o conteúdo para parsear corretamente
+        json_data = json.loads(json_data)
+    except Exception:
+        return {"erro": "Erro ao processar os dados"}
 
-                mandante = clubes[0].inner_text().strip()
-                visitante = clubes[1].inner_text().strip()
+    eventos = [v for k, v in json_data.items() if k.startswith("Event:")]
 
-                data_formatada = datetime.strptime(data, "%d-%m-%Y").strftime("%d/%m/%Y")
-                jogos.append(f"{data_formatada} - {hora} - {mandante} x {visitante}")
+    resultados = {}
+    for evento in eventos:
+        campeonato = evento.get("championship", {}).get("name", "Desconhecido")
+        mandante = evento.get("homeTeam", {}).get("name")
+        visitante = evento.get("awayTeam", {}).get("name")
+        hora = evento.get("startTime")
+        if not all([mandante, visitante, hora]):
+            continue
 
-            jogos.sort()
-            if jogos:
-                resultados[nome_camp] = jogos
+        hora_formatada = datetime.fromisoformat(hora).strftime("%H:%M")
+        data_formatada = datetime.strptime(data, "%d-%m-%Y").strftime("%d/%m/%Y")
+        linha = f"{data_formatada} - {hora_formatada} - {mandante} x {visitante}"
 
-        browser.close()
-        return resultados
+        if campeonato not in resultados:
+            resultados[campeonato] = []
+        resultados[campeonato].append(linha)
+
+    for jogos in resultados.values():
+        jogos.sort()
+
+    return resultados
 
 if __name__ == "__main__":
+    import uvicorn
     port = int(os.environ.get("PORT", 10000))
     uvicorn.run("main:app", host="0.0.0.0", port=port)
