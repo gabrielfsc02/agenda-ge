@@ -1,44 +1,36 @@
 
-# Agenda GE - Jogos do Dia
+# Agenda GE - Web App
 
-Este projeto coleta os jogos do site agenda.ge.globo.com por data e exibe de forma organizada.
+Este projeto coleta jogos do site agenda.ge.globo.com e exibe por campeonato, com opção de impressão.
 
-## 📦 Backend (FastAPI + Playwright)
+## ✅ Tecnologias
 
-### Como rodar localmente
-1. Instale as dependências:
-```
+- Backend: FastAPI + requests + BeautifulSoup
+- Frontend: HTML + JavaScript
+- Hospedagem: Render (backend) + Netlify (frontend)
+
+## 🚀 Como rodar localmente
+
+```bash
 pip install -r requirements.txt
-playwright install
-```
-
-2. Rode o servidor:
-```
 uvicorn main:app --reload
 ```
 
-## 🌐 Frontend
+Acesse: http://localhost:8000/jogos/28-03-2025
 
-Abra o `index.html` no navegador ou hospede em serviços como Netlify ou Vercel.
+## 🌐 Como hospedar
 
----
+### Backend (Render)
 
-## 🚀 Hospedagem Gratuita
-
-### Backend (Render.com)
-
-1. Crie conta no https://render.com
-2. Crie um novo "Web Service"
-3. Escolha "Deploy from GitHub" e conecte este repositório
-4. Configure:
-   - **Build Command:** `pip install -r requirements.txt && playwright install`
-   - **Start Command:** `uvicorn main:app --host 0.0.0.0 --port 10000`
-   - **Porta:** `10000`
-   - **Plano:** Free
+- Crie um serviço web em https://render.com
+- Conecte com este repositório do GitHub
+- Use:
+  - Build command: `pip install -r requirements.txt`
+  - Start command: `uvicorn main:app --host 0.0.0.0 --port 10000`
 
 ### Frontend (Netlify)
 
-1. Crie conta no https://netlify.com
-2. Faça upload de `index.html` e `script.js`
-3. Após o deploy, seu site estará disponível online
+- Vá para https://netlify.com
+- Faça upload de `index.html` e `script.js`
+- Pronto!
 
