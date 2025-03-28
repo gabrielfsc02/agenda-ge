@@ -56,3 +56,28 @@ async function buscar() {
     });
   });
 }
+
+// Função para copiar os jogos exibidos
+function copiarJogos() {
+  const jogosText = document.getElementById('resultados').innerText;
+  if (!jogosText) {
+    alert("Nenhum jogo encontrado para copiar!");
+    return;
+  }
+
+  navigator.clipboard.writeText(jogosText).then(() => {
+    const alertDiv = document.getElementById('copiedAlert');
+    alertDiv.style.display = 'block';
+    setTimeout(() => alertDiv.style.display = 'none', 3000);  // Oculta o alerta após 3 segundos
+  }).catch(err => {
+    console.error("Erro ao copiar:", err);
+  });
+}
+
+// Função para imprimir a agenda GE no formato correto
+function imprimirAgenda() {
+  const iframe = document.getElementById('iframeAgenda');
+  const iframeSrc = iframe.src;
+  const printWindow = window.open(iframeSrc, '_blank', 'width=800,height=600');
+  printWindow.print();
+}
