@@ -6,6 +6,7 @@ from datetime import datetime
 
 app = FastAPI()
 
+# Habilita CORS para permitir chamadas do frontend
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -19,6 +20,7 @@ GRAPHQL_URL = "https://geql.globo.com/graphql"
 @app.get("/jogos/{data}")
 def coletar_jogos(data: str):
     try:
+        # Recebe data no formato DD-MM-YYYY e converte para YYYY-MM-DD
         dia, mes, ano = data.split("-")
         data_formatada = f"{ano}-{mes}-{dia}"
         
@@ -44,35 +46,55 @@ def coletar_jogos(data: str):
         
         res = requests.get(GRAPHQL_URL, headers=headers, params=params)
         res.raise_for_status()
-        data = res.json()
+        response_json = res.json()
         
-        # Print the raw response data to check structure
-        print("Response Data:", data)
+        # Para depuração, imprima a resposta (pode comentar depois)
+        print("Response Data:", response_json)
         
-        # Check if 'sports' key exists
-        if "data" in data and "sports" in data["data"]:
-            eventos = data["data"]["sports"][0]["events"]["items"]
+        # A nova estrutura vem com a chave "championshipsAgenda"
+        if "data" in response_json and "championshipsAgenda" in response_json["data"]:
+            agendas = response_json["data"]["championshipsAgenda"]
         else:
-            return {"erro": "Estrutura dos dados inesperada ou chave 'sports' não encontrada"}
+            return {"erro": "Estrutura dos dados inesperada ou chave 'championshipsAgenda' não encontrada"}
         
         resultados = {}
-        for evento in eventos:
-            campeonato = evento["championship"]["name"]
-            mandante = evento["homeTeam"]["name"]
-            visitante = evento["awayTeam"]["name"]
-            hora_raw = evento["startTime"]
-
-            hora = datetime.fromisoformat(hora_raw).strftime("%H:%M")
-            data_formatada_exibicao = datetime.fromisoformat(hora_raw).strftime("%d/%m/%Y")
-            linha = f"{data_formatada_exibicao} - {hora} - {mandante} x {visitante}"
-
-            if campeonato not in resultados:
-                resultados[campeonato] = []
-            resultados[campeonato].append(linha)
-
+        
+        # Para cada agenda (cada campeonato) na resposta
+        for agenda in agendas:
+            campeonato = agenda.get("championship", {}).get("name", "Desconhecido")
+            # Os eventos futuros estão na chave "future"
+            eventos = agenda.get("future", [])
+            for evento in eventos:
+                match = evento.get("match", {})
+                # Extraindo dados: data, hora, times
+                start_date = match.get("startDate")
+                start_hour = match.get("startHour")
+                first_team = match.get("firstContestant", {}).get("popularName")
+                second_team = match.get("secondContestant", {}).get("popularName")
+                
+                # Se faltar alguma informação, pula esse evento
+                if not all([start_date, start_hour, first_team, second_team]):
+                    continue
+                
+                try:
+                    # Formata a data (assumindo formato YYYY-MM-DD)
+                    data_exibicao = datetime.strptime(start_date, "%Y-%m-%d").strftime("%d/%m/%Y")
+                    # Formata a hora (assumindo formato HH:MM:SS)
+                    hora_exibicao = datetime.strptime(start_hour, "%H:%M:%S").strftime("%H:%M")
+                except Exception:
+                    data_exibicao = start_date
+                    hora_exibicao = start_hour
+                
+                linha = f"{data_exibicao} - {hora_exibicao} - {first_team} x {second_team}"
+                
+                if campeonato not in resultados:
+                    resultados[campeonato] = []
+                resultados[campeonato].append(linha)
+        
+        # Ordena as linhas de cada campeonato
         for jogos in resultados.values():
             jogos.sort()
-
+        
         return resultados
 
     except Exception as e:
