@@ -14,49 +14,35 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-GRAPHQL_URL = "https://ge.globo.com/graphql"
+GRAPHQL_URL = "https://geql.globo.com/graphql"
 
 @app.get("/jogos/{data}")
 def coletar_jogos(data: str):
     try:
         dia, mes, ano = data.split("-")
         data_formatada = f"{ano}-{mes}-{dia}"
-
+        
         headers = {
-            "User-Agent": "Mozilla/5.0",
-            "Content-Type": "application/json",
-            "Referer": "https://ge.globo.com/"
+            "accept": "*/*",
+            "accept-language": "pt-PT,pt;q=0.9,en-US;q=0.8,en;q=0.7",
+            "content-type": "application/json",
+            "origin": "https://ge.globo.com",
+            "referer": "https://ge.globo.com/",
+            "sec-ch-ua": '"Chromium";v="134", "Not:A-Brand";v="24", "Google Chrome";v="134"',
+            "sec-ch-ua-mobile": "?0",
+            "sec-ch-ua-platform": '"Windows"',
+            "sec-fetch-dest": "empty",
+            "sec-fetch-mode": "cors",
+            "sec-fetch-site": "same-site",
+            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36",
         }
-
-        query = {
-            "operationName": "AgendaFutebol",
-            "variables": {
-                "sport": "futebol",
-                "date": data_formatada
-            },
-            "query": '''
-                query AgendaFutebol($sport: String!, $date: String!) {
-                  sports(sport: $sport) {
-                    events(date: $date) {
-                      items {
-                        startTime
-                        homeTeam {
-                          name
-                        }
-                        awayTeam {
-                          name
-                        }
-                        championship {
-                          name
-                        }
-                      }
-                    }
-                  }
-                }
-            '''
+        
+        params = {
+            "variables": f'{{"date":"{data_formatada}"}}',
+            "extensions": '{"persistedQuery":{"version":1,"sha256Hash":"c1b3f92ec73ae582e54ed74125a92b9fa8310083ca25d37fa89801d8833e8e8c"}}'
         }
-
-        res = requests.post(GRAPHQL_URL, headers=headers, json=query)
+        
+        res = requests.get(GRAPHQL_URL, headers=headers, params=params)
         res.raise_for_status()
         data = res.json()
 
