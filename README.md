@@ -1,36 +1,20 @@
+# Agenda GE - Jogos do Dia
 
-# Agenda GE - Web App
+Este projeto coleta e exibe informações dos jogos do site agenda.ge.globo.com, organizando-os por campeonato e horário.
 
-Este projeto coleta jogos do site agenda.ge.globo.com e exibe por campeonato, com opção de impressão.
+## Tecnologias Utilizadas
+- **Backend:** FastAPI, Requests (utilizando a API GraphQL do GE)
+- **Frontend:** HTML, JavaScript
+- **Hospedagem:** Render para o backend e Netlify para o frontend (100% gratuito)
 
-## ✅ Tecnologias
+## Como Rodar Localmente
 
-- Backend: FastAPI + requests + BeautifulSoup
-- Frontend: HTML + JavaScript
-- Hospedagem: Render (backend) + Netlify (frontend)
+### Requisitos:
+- Python 3.11+
+- Git
 
-## 🚀 Como rodar localmente
-
-```bash
-pip install -r requirements.txt
-uvicorn main:app --reload
-```
-
-Acesse: http://localhost:8000/jogos/28-03-2025
-
-## 🌐 Como hospedar
-
-### Backend (Render)
-
-- Crie um serviço web em https://render.com
-- Conecte com este repositório do GitHub
-- Use:
-  - Build command: `pip install -r requirements.txt`
-  - Start command: `uvicorn main:app --host 0.0.0.0 --port 10000`
-
-### Frontend (Netlify)
-
-- Vá para https://netlify.com
-- Faça upload de `index.html` e `script.js`
-- Pronto!
-
+### Passos:
+1. Clone o repositório:
+   ```bash
+   git clone https://github.com/SEU_USUARIO/agenda-ge.git
+   cd agenda-ge
