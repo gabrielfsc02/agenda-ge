@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Agenda de Jogos - GE.globo</title>
   <style>
     :root {
@@ -118,6 +118,8 @@
       text-align: center;
     }
   </style>
+  <!-- jsPDF (para geração do PDF) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
   <div class="header">
@@ -139,106 +141,10 @@
     <h2>Agenda GE.globo</h2>
     <iframe id="geAgendaIframe" src="https://ge.globo.com/agenda/#/futebol/"></iframe>
     <div class="iframe-controls">
-      <button onclick="imprimirAgenda()">Imprimir Agenda</button>
+      <button onclick="imprimirAgenda()">Gerar PDF</button>
     </div>
   </div>
 
-  <script>
-    // Atualiza o iframe com a data selecionada
-    function atualizarIframe() {
-      const data = document.getElementById('dataInput').value;
-      const iframe = document.getElementById('geAgendaIframe');
-      
-      if (data) {
-        const [ano, mes, dia] = data.split('-');
-        const dataFormatada = `${dia}-${mes}-${ano}`;
-        iframe.src = `https://ge.globo.com/agenda/#/futebol/${dataFormatada}`;
-      } else {
-        iframe.src = 'https://ge.globo.com/agenda/#/futebol/';
-      }
-    }
-
-    // Função para buscar os jogos do backend
-    async function carregarJogos() {
-      const data = document.getElementById('dataInput').value;
-      const resultado = document.getElementById('resultado');
-      
-      if (!data) {
-        resultado.innerHTML = `<div class="error">Selecione uma data válida</div>`;
-        return;
-      }
-
-      const [ano, mes, dia] = data.split('-');
-      const dataFormatada = `${dia}-${mes}-${ano}`;
-
-      resultado.innerHTML = `<div class="loading">Carregando jogos...</div>`;
-      try {
-        const resposta = await fetch(`https://agenda-ge-backend.onrender.com/jogos/${dataFormatada}`);
-        const jogos = await resposta.json();
-        
-        if (jogos.erro) {
-          resultado.innerHTML = `<div class="error">${jogos.erro}</div>`;
-          document.getElementById('copyButton').style.display = 'none';
-          return;
-        }
-        
-        exibirJogos(jogos);
-        document.getElementById('copyButton').style.display = 'block';
-      } catch (erro) {
-        resultado.innerHTML = `<div class="error">Erro: ${erro.message}</div>`;
-        document.getElementById('copyButton').style.display = 'none';
-      }
-    }
-
-    function exibirJogos(jogos) {
-      // Agrupa os jogos por campeonato
-      const agrupados = Object.keys(jogos).reduce((acc, campeonato) => {
-        acc[campeonato] = jogos[campeonato];
-        return acc;
-      }, {});
-      
-      let html = '<div class="jogos-container">';
-      for (const [campeonato, jogosList] of Object.entries(agrupados)) {
-        html += `
-          <div class="campeonato">
-            <div class="campeonato-header">${campeonato}</div>
-        `;
-        jogosList.forEach(jogo => {
-          html += `
-            <div class="jogo">
-              <span class="jogo-formatado">${jogo}</span>
-            </div>
-          `;
-        });
-        html += '</div>';
-      }
-      html += '</div>';
-      document.getElementById('resultado').innerHTML = html;
-    }
-
-    // Função para copiar os jogos exibidos
-    function copiarTexto() {
-      const resultado = document.getElementById('resultado').innerText;
-      if (!resultado) {
-        alert("Nenhum jogo encontrado para copiar!");
-        return;
-      }
-      navigator.clipboard.writeText(resultado)
-        .then(() => {
-          alert("Texto copiado para a área de transferência!");
-        })
-        .catch(err => {
-          alert("Erro ao copiar texto: " + err);
-        });
-    }
-
-    // Função para imprimir a agenda (abrindo o iframe em nova janela para impressão)
-    function imprimirAgenda() {
-      const iframe = document.getElementById('geAgendaIframe');
-      const novaJanela = window.open(iframe.src, '_blank', 'width=1200,height=800');
-      novaJanela.focus();
-      novaJanela.print();
-    }
-  </script>
+  <script src="script.js"></script>
 </body>
 </html>
