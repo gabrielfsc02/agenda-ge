@@ -82,34 +82,80 @@ function copiarTexto() {
 }
 
 // Função para gerar PDF da página do GE usando o endpoint do backend
-async function imprimirAgenda() {
-  const data = document.getElementById('dataInput').value;
-  if (!data) {
-    alert("Selecione uma data!");
+async function carregarJogos() {
+  const dataInput = document.getElementById('dataInput').value;
+  if (!dataInput) {
+    alert("Escolha uma data!");
     return;
   }
-  const [ano, mes, dia] = data.split('-');
-  const dataFormatada = `${dia}-${mes}-${ano}`;
-  
-  try {
-    // Chama o endpoint /gerar-pdf da sua API
-    const response = await fetch(`https://agenda-ge-backend.onrender.com/gerar-pdf/${dataFormatada}`, {
-      method: 'POST'
-    });
-    if (!response.ok) {
-      const erro = await response.json();
-      throw new Error(erro.erro || 'Erro na geração do PDF');
-    }
-    const blob = await response.blob();
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `agenda_ge_${dataFormatada}.pdf`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    window.URL.revokeObjectURL(url);
-  } catch (erro) {
-    alert("Erro ao gerar PDF: " + erro.message);
+
+  const partes = dataInput.split('-'); // yyyy-mm-dd
+  const dataFormatada = `${partes[2]}-${partes[1]}-${partes[0]}`;
+
+  const res = await fetch(`https://agenda-ge-backend.onrender.com/jogos/${dataFormatada}`);
+  const dados = await res.json();
+
+  const div = document.getElementById("resultados");
+  div.innerHTML = '';
+
+  if (!dados || dados.erro) {
+    div.innerHTML = `<p style="color:red;">${dados.erro || 'Erro ao buscar dados.'}</p>`;
+    return;
   }
+
+  Object.keys(dados).forEach(campeonato => {
+    const h2 = document.createElement('h2');
+    h2.innerText = campeonato;
+    div.appendChild(h2);
+
+    dados[campeonato].forEach(jogo => {
+      const p = document.createElement('p');
+      p.innerText = jogo;
+      div.appendChild(p);
+    });
+  });
+}
+
+function atualizarIframe() {
+  const data = document.getElementById('dataInput').value;
+  const iframe = document.getElementById('geAgendaIframe');
+
+  if (data) {
+    const [ano, mes, dia] = data.split('-');
+    const dataFormatada = `${dia}-${mes}-${ano}`;
+    iframe.src = `https://ge.globo.com/agenda/#/futebol/${dataFormatada}`;
+  } else {
+    iframe.src = 'https://ge.globo.com/agenda/#/futebol/';
+  }
+}
+
+function copiarTexto() {
+  const resultados = document.getElementById('resultados');
+  const texto = resultados.innerText;
+
+  navigator.clipboard.writeText(texto)
+    .then(() => alert("Texto copiado para a área de transferência!"))
+    .catch(() => alert("Erro ao copiar texto."));
+}
+
+function imprimirAgendaGE() {
+  const data = document.getElementById('dataInput').value;
+
+  if (!data) {
+    alert("Selecione uma data antes de imprimir.");
+    return;
+  }
+
+  const [ano, mes, dia] = data.split("-");
+  const dataFormatada = `${dia}-${mes}-${ano}`;
+
+  // Abre nova aba com a agenda GE já na data correta
+  const url = `https://ge.globo.com/agenda/#/futebol/${dataFormatada}`;
+  const novaJanela = window.open(url, '_blank');
+
+  novaJanela.onload = function () {
+    setTimeout(() => {
+      novaJanela.print();
+    }, 2000); // tempo para carregar e exibir corretamente
+  };
 }
