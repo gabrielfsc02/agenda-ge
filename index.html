@@ -2,146 +2,218 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Agenda de Jogos - GE.globo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agenda GE - Jogos do Dia</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --primary: #2c3e50;
-      --secondary: #3498db;
-      --background: #ecf0f1;
+      --bg: #f8f9fa;
+      --primary: #1e88e5;
+      --secondary: #1565c0;
       --text: #2c3e50;
-      --button-hover: #2980b9;
+      --card-bg: #ffffff;
+      --shadow: 0 8px 20px rgba(0,0,0,0.1);
     }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
     body {
-      font-family: 'Segoe UI', system-ui, sans-serif;
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 20px;
-      background: var(--background);
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
       color: var(--text);
+      padding: 2rem;
     }
-    .header {
+
+    header {
       text-align: center;
       margin-bottom: 2rem;
-      padding: 1rem;
-      background: var(--primary);
-      color: white;
-      border-radius: 10px;
     }
+
+    header h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
     .controls {
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 1rem;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
       margin-bottom: 2rem;
+      gap: 1rem;
     }
+
     input[type="date"] {
-      padding: 0.8rem;
-      border: 2px solid var(--secondary);
-      border-radius: 8px;
+      padding: 0.7rem;
       font-size: 1rem;
-      width: 100%;
+      border: 2px solid var(--primary);
+      border-radius: 8px;
+      background: white;
+      flex: 1;
     }
+
     button {
-      padding: 0.8rem 2rem;
-      background: var(--secondary);
+      padding: 0.75rem 1.5rem;
+      font-size: 1rem;
+      background: var(--primary);
       color: white;
       border: none;
       border-radius: 8px;
       cursor: pointer;
-      transition: transform 0.2s, background-color 0.3s ease;
+      transition: background 0.3s ease;
     }
+
     button:hover {
-      transform: translateY(-2px);
-      background-color: var(--button-hover);
+      background: var(--secondary);
     }
-    .copy-button {
-      background-color: #2ecc71;
-    }
-    .copy-button:hover {
-      background-color: #27ae60;
-    }
+
     .jogos-container {
       display: grid;
       gap: 1.5rem;
     }
+
     .campeonato {
-      background: white;
+      background: var(--card-bg);
       border-radius: 10px;
-      overflow: hidden;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-      margin-bottom: 1rem;
+      box-shadow: var(--shadow);
+      padding: 1.5rem;
     }
+
     .campeonato-header {
-      padding: 1rem;
-      background: var(--primary);
-      color: white;
-      font-weight: bold;
+      font-weight: 600;
+      font-size: 1.2rem;
+      margin-bottom: 1rem;
+      color: var(--primary);
+      border-left: 5px solid var(--secondary);
+      padding-left: 0.5rem;
     }
+
     .jogo {
-      padding: 1rem;
+      padding: 0.5rem 0;
       border-bottom: 1px solid #eee;
     }
+
     .jogo:last-child {
       border-bottom: none;
     }
-    .loading {
-      padding: 2rem;
-      text-align: center;
-      color: #7f8c8d;
+
+    .jogo-formatado {
+      font-weight: 500;
     }
-    .error {
+
+    .copy-button-container {
+      text-align: center;
+      margin-top: 1rem;
+    }
+
+    .error, .loading {
+      text-align: center;
       padding: 1.5rem;
-      background: #ffeef0;
-      color: #ff4444;
-      border-radius: 8px;
-      text-align: center;
-    }
-    .iframe-section {
-      margin-top: 2rem;
-      background: white;
-      padding: 1rem;
+      background: #ffe9e9;
+      border: 1px solid #ffaaaa;
       border-radius: 10px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      color: #c0392b;
+      font-weight: 500;
     }
-    .iframe-section h2 {
-      margin-bottom: 1rem;
-      color: var(--primary);
-    }
+
     iframe {
       width: 100%;
-      height: 600px;
+      height: 500px;
+      border-radius: 10px;
       border: none;
-      border-radius: 5px;
-    }
-    .iframe-controls {
-      margin-top: 1rem;
-      text-align: center;
+      margin-top: 2rem;
+      box-shadow: var(--shadow);
     }
   </style>
 </head>
 <body>
-  <div class="header">
+  <header>
     <h1>⚽ Agenda de Jogos - GE.globo</h1>
-  </div>
+  </header>
 
-  <div class="controls">
-    <input type="date" id="dataInput" onchange="atualizarIframe()">
-    <button onclick="carregarJogos()">Buscar Jogos</button>
-  </div>
-
-  <div id="resultado"></div>
-
-  <div style="text-align:center; margin-top: 1rem;">
-    <button id="copyButton" class="copy-button" onclick="copiarTexto()" style="display:none;">Copiar Texto</button>
-  </div>
-
-  <div class="iframe-section">
-    <h2>Agenda GE.globo</h2>
-    <iframe id="geAgendaIframe" src="https://ge.globo.com/agenda/#/futebol/"></iframe>
-    <div class="iframe-controls">
+  <div class="container">
+    <div class="controls">
+      <input type="date" id="dataInput" onchange="atualizarIframe()">
+      <button onclick="carregarJogos()">Buscar Jogos</button>
+      <button onclick="copiarTexto()">Copiar Texto</button>
     </div>
+
+    <div id="resultado"></div>
+    <iframe id="geAgendaIframe" src="https://ge.globo.com/agenda/#/futebol/"></iframe>
   </div>
 
-  <script src="script.js"></script>
+  <script>
+    function atualizarIframe() {
+      const data = document.getElementById('dataInput').value;
+      const iframe = document.getElementById('geAgendaIframe');
+      if (data) {
+        const [ano, mes, dia] = data.split('-');
+        const dataFormatada = `${dia}-${mes}-${ano}`;
+        iframe.src = `https://ge.globo.com/agenda/#/futebol/${dataFormatada}`;
+      } else {
+        iframe.src = 'https://ge.globo.com/agenda/#/futebol/';
+      }
+    }
+
+    async function carregarJogos() {
+      const data = document.getElementById('dataInput').value;
+      const resultado = document.getElementById('resultado');
+      if (!data) {
+        resultado.innerHTML = `<div class="error">Selecione uma data válida</div>`;
+        return;
+      }
+
+      const [ano, mes, dia] = data.split('-');
+      const dataFormatada = `${dia}-${mes}-${ano}`;
+
+      resultado.innerHTML = `<div class="loading">Carregando jogos...</div>`;
+
+      try {
+        const resposta = await fetch(`https://agenda-ge-backend.onrender.com/jogos/${dataFormatada}`);
+        const jogos = await resposta.json();
+
+        if (jogos.erro) {
+          resultado.innerHTML = `<div class="error">${jogos.erro}</div>`;
+          return;
+        }
+
+        let html = '<div class="jogos-container">';
+        for (const [campeonato, jogosList] of Object.entries(jogos)) {
+          html += `<div class="campeonato">`;
+          html += `<div class="campeonato-header">${campeonato}</div>`;
+          jogosList.forEach(jogo => {
+            html += `<div class="jogo"><span class="jogo-formatado">${jogo}</span></div>`;
+          });
+          html += `</div>`;
+        }
+        html += '</div>';
+
+        resultado.innerHTML = html;
+      } catch (erro) {
+        resultado.innerHTML = `<div class="error">Erro: ${erro.message}</div>`;
+      }
+    }
+
+    function copiarTexto() {
+      const texto = document.getElementById('resultado').innerText;
+      if (!texto) {
+        alert("Nenhum jogo encontrado para copiar!");
+        return;
+      }
+      navigator.clipboard.writeText(texto)
+        .then(() => alert("Texto copiado para a área de transferência!"))
+        .catch(err => alert("Erro ao copiar texto: " + err));
+    }
+  </script>
 </body>
 </html>
