@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Agenda GE - Jogos do Dia</title>
+  <script defer src="script.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    h2 { margin-top: 30px; }
+    button { margin-top: 20px; }
+    .data { font-weight: bold; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <h1>Jogos do Dia (Agenda GE)</h1>
+  <label for="data">Escolha a data: </label>
+  <input type="date" id="data">
+  <button onclick="carregarJogos()">Buscar</button>
+  <button onclick="window.print()">Imprimir/Salvar</button>
+  <div id="resultados"></div>
+</body>
+</html>
