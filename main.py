@@ -1,11 +1,18 @@
+
+import os
+import subprocess
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from playwright.sync_api import sync_playwright
 from datetime import datetime
 import uvicorn
 
+# Garante instalação dos navegadores no ambiente da Render
+subprocess.run("playwright install --with-deps", shell=True)
+
 app = FastAPI()
 
+# Permitir chamadas do frontend (CORS)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -22,8 +29,8 @@ def coletar_jogos(data: str):
         browser = p.chromium.launch(headless=True)
         page = browser.new_page()
         page.goto(url, wait_until="load")
-
         page.wait_for_selector(".eventGrouperstyle__GroupByChampionshipsWrapper-sc-1bz1qr-0", timeout=15000)
+
         campeonatos = page.query_selector_all(".eventGrouperstyle__GroupByChampionshipsWrapper-sc-1bz1qr-0")
         resultados = {}
 
@@ -56,8 +63,6 @@ def coletar_jogos(data: str):
         browser.close()
         return resultados
 
-import os
-
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 10000))  # Render define essa variável
+    port = int(os.environ.get("PORT", 10000))
     uvicorn.run("main:app", host="0.0.0.0", port=port)
